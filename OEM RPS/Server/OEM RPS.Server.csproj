@@ -10,8 +10,17 @@
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
+
+  <!-- Entity Framework Core Dependencies -->
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.11" />
+  </ItemGroup>
+
+  <!-- Entity Framework Core Tools -->
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="7.0.11" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,4 +29,14 @@
   </ItemGroup>
 
 
+  <ItemGroup>
+    <None Remove="Services\" />
+    <None Remove="DataBaseContext\" />
+    <None Remove="Repositories\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\" />
+    <Folder Include="DataBaseContext\" />
+    <Folder Include="Repositories\" />
+  </ItemGroup>
 </Project>

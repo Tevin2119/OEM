@@ -9,4 +9,14 @@
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="DTO\" />
+    <None Remove="Model\" />
+    <None Remove="Enums\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DTO\" />
+    <Folder Include="Model\" />
+    <Folder Include="Enums\" />
+  </ItemGroup>
 </Project>
