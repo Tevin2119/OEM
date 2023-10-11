@@ -1,0 +1,15 @@
+﻿.table-header:hover {
+    cursor: grab;
+}
+
+.table-row:hover {
+    background-color: lightblue;
+    cursor: grab;
+}
+
+
+@media (max-width: 767px) {
+    main {
+        width: 100vw;
+    }
+}

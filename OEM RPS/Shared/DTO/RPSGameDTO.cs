@@ -5,13 +5,17 @@ namespace OEM_RPS.Shared.DTO
 {
 	public class RPSGameDTO
 	{
-		public int GameID { get; set; }
+        public RPSGameDTO()
+        {
+            PlayerName = "P1"; //default to P1
+        }
+
+        public int GameID { get; set; }
 
 		public string PlayerName { get; set; }
 
-		public Position Choice { get; set; }
+		public PositionEnum Choice { get; set; }
 
-		public bool RandomMode { get; set; }
+		public int BestOf { get; set; }
 	}
 }
-

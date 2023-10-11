@@ -1,0 +1,60 @@
+﻿
+<ScoreBoard PlayerName=@(Game.Player2) Score="Player2Score" Position="Player2Position"/>
+<Carousel ImageUrls="ImageUrls"/>
+
+<ScoreBoard PlayerName=@(Game.Player1)  Score="Player1Score" Position="Player1Position"/>
+<Carousel ImageUrls="ImageUrls"  CanSelect="player1Turn" HandleSelection="HandleSelection"/>
+
+
+
+@code {
+    protected override void OnParametersSet()
+    {
+        if (Game != null && Game.RoundResults != null)
+        {
+            Player1Score = Game.RoundResults.Count(x => x.Winner == OEM_RPS.Shared.Enums.WinnerEnum.Player1 || x.Winner == OEM_RPS.Shared.Enums.WinnerEnum.Tie);
+            Player2Score = Game.RoundResults.Count(x => x.Winner == OEM_RPS.Shared.Enums.WinnerEnum.Player2 || x.Winner == OEM_RPS.Shared.Enums.WinnerEnum.Tie);
+            player1Turn = true;
+
+            var currentRound = Game.RoundResults.OrderByDescending(x => x.createdAt).FirstOrDefault();
+
+            if(currentRound != null)
+            {
+                Player1Position = currentRound.Player1Choice;
+                Player2Position = currentRound.Player2Choice;
+            }
+        }
+
+        base.OnParametersSet();
+    }
+
+    [Parameter]
+    public List<string>? ImageUrls { get; set; }
+
+    [Parameter]
+    public RPSGame? Game { get; set; }
+
+    [Parameter]
+    public Action<PositionEnum>? HandlePosition { get; set; }
+
+    private void HandleSelection(PositionEnum position)
+    {
+        //verify selection before invokation
+
+        if (HandlePosition == null) return;
+
+        HandlePosition?.Invoke(position);
+        StateHasChanged();
+    }
+
+    protected bool player1Turn;
+
+    protected int Player1Score;
+    protected int Player2Score;
+
+    protected PositionEnum Player1Position;
+    protected PositionEnum Player2Position;
+
+
+}
+

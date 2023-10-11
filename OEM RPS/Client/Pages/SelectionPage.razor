@@ -1,0 +1,30 @@
+﻿@page "/counter"
+
+@if (string.IsNullOrEmpty(PlayerName))
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div>
+        <h1 class="text-center">@PlayerName</h1>
+
+        <h2 role="status">Current Score: @currentCount</h2>
+
+        @*<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>*@
+
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public string PlayerName { get; set; } = "";
+
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}
