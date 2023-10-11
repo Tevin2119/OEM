@@ -1,0 +1,83 @@
+﻿@using Repositories
+@using OEM_RPS.Shared
+@using OEM_RPS.Shared.DTO
+
+<div class="login-card">
+    <div class="login-card-content">
+        <Carousel ImageUrls="ImageUrls" />
+        <div class="form">
+            <div class="form-field username">
+                <div class="icon">
+                    <i class="far fa-user"></i>
+                </div>
+                <input type="text" maxlength="25" placeholder="Username" @bind="userName" @oninput="UpdateUsername">
+            </div>
+            <div class="form-field">
+                <div class="icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <input type="number" min="1" max="10" placeholder="Best Of" @bind="bestoF" @oninput="UpdateBestOf">
+            </div>
+            <div class="form-field">
+                @*<input type="checkbox" checked="@randomMode"  placeholder="Random Mode" @bind="bestoF" @oninput="UpdateBestOf">*@
+
+                @gameMode <input type="checkbox" checked="@randomMode" @onchange="UpdateRandomMode"> <!-- Use the @randomMode variable here -->
+            </div>
+
+            <button type="submit" @onclick=@(() =>
+                HandleFormSubmission.Invoke())>
+                play
+            </button>
+        </div>
+    </div>
+    <div class="login-card-footer">
+        <a href="leader-board/">LeaderBoard?</a>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<string> ImageUrls { get; set; } = new();
+
+    [Parameter]
+    public Action<string> HandleUsername { get; set; }
+
+    [Parameter]
+    public Action<int> HandleBestOf { get; set; }
+
+    [Parameter]
+    public Action<bool> HandleRandomMode { get; set; }
+
+    [Parameter]
+    public Action HandleFormSubmission { get; set; }
+
+
+    protected string? userName;
+    protected int bestoF = 1;
+    protected bool randomMode = true;
+    protected string gameMode = "Randomised";
+
+    private void UpdateUsername(ChangeEventArgs e)
+    {
+        userName = e.Value?.ToString();
+
+        HandleUsername.Invoke(userName);
+    }
+
+    private void UpdateBestOf(ChangeEventArgs e)
+    {
+        int.TryParse(e.Value?.ToString(), out bestoF);
+
+        HandleBestOf.Invoke(bestoF);
+    }
+
+    private void UpdateRandomMode(ChangeEventArgs e)
+    {
+        randomMode = !randomMode;
+        gameMode = randomMode == true ? "Randomised" : "Predictable";
+
+        HandleRandomMode.Invoke(randomMode);
+    }
+
+}
+

@@ -1,0 +1,120 @@
+﻿@page "/leader-board"
+@inject IGameRepository repo
+@inject NavigationManager NavigationManager
+
+
+<PageTitle>Leaderboard</PageTitle>
+
+<h1>Leaderboard</h1>
+
+<p>This component demonstrates displaying data from the server.</p>
+
+@if (games == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table id="leaderboard" class="table">
+        <thead>
+            <tr>
+                <th><a @onclick="SortByGameId" class="table-header">Game ID</a></th>
+                <th><a @onclick="SortByPlayer1" class="table-header">Player 1</a></th>
+                <th><a @onclick="SortByPlayer2" class="table-header">Player 2</a></th>
+                <th><a @onclick="SortByBestOf" class="table-header">Best Of</a></th>
+                <th><a @onclick="SortByRoundsPlayed" class="table-header">Rounds Played</a></th>
+                <th><a class="table-header"> Winner </a></th>
+                <th><a @onclick="SortByClosed" class="table-header">Closed</a></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var game in sortedGames)
+            {
+                <tr class="table-row">
+                    <td>@game.Id</td>
+                    <td>@game.Player1</td>
+                    <td>@game.Player2</td>
+                    <td>@game.RoundsToWin</td>
+                    <td>@game.RoundResults.Count() ?? 0</td>
+                    <td>@GetOverallWinner(game.RoundResults)</td>
+                    <td>@game.Closed</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<RPSGame>? games;
+    private List<RPSGame>? sortedGames;
+    private bool sortAscending = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await repo.GetAllGames();
+
+        if (response.StatusCode == StatusCodeEnum.Success && response.Data != null)
+        {
+            games = response.Data;
+            sortedGames = games.ToList();
+        }
+    }
+
+    // Sorting methods
+    private void SortByGameId()
+    {
+        sortedGames = sortAscending ? sortedGames.OrderBy(game => game.Id).ToList() : sortedGames.OrderByDescending(game => game.Id).ToList();
+        sortAscending = !sortAscending;
+    }
+
+    private void SortByPlayer1()
+    {
+        sortedGames = sortAscending ? sortedGames.OrderBy(game => game.Player1).ToList() : sortedGames.OrderByDescending(game => game.Player1).ToList();
+        sortAscending = !sortAscending;
+    }
+
+    private void SortByPlayer2()
+    {
+        sortedGames = sortAscending ? sortedGames.OrderBy(game => game.Player2).ToList() : sortedGames.OrderByDescending(game => game.Player2).ToList();
+        sortAscending = !sortAscending;
+    }
+    private void SortByBestOf()
+    {
+        sortedGames = sortAscending ? sortedGames.OrderBy(game => game.RoundsToWin).ToList() : sortedGames.OrderByDescending(game => game.RoundsToWin).ToList();
+        sortAscending = !sortAscending;
+    }
+    private void SortByRoundsPlayed()
+    {
+        sortedGames = sortAscending ? sortedGames.OrderBy(game => game.RoundResults.Count()).ToList() : sortedGames.OrderByDescending(game => game.RoundResults.Count()).ToList();
+        sortAscending = !sortAscending;
+    }
+    private void SortByClosed()
+    {
+        sortedGames = sortAscending ? sortedGames.OrderBy(game => game.Closed).ToList() : sortedGames.OrderByDescending(game => game.Closed).ToList();
+        sortAscending = !sortAscending;
+    }
+
+    private string GetOverallWinner(List<RoundResult>? roundResults)
+    {
+        if (roundResults == null)
+        {
+            return "N/A";
+        }
+
+        int player1Wins = roundResults.Count(r => r.Winner == WinnerEnum.Player1);
+        int player2Wins = roundResults.Count(r => r.Winner == WinnerEnum.Player2);
+
+        if (player1Wins > player2Wins)
+        {
+            return "Player 1";
+        }
+        else if (player2Wins > player1Wins)
+        {
+            return "Player 2";
+        }
+        else
+        {
+            return "Tie";
+        }
+    }
+}

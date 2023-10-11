@@ -11,15 +11,15 @@ namespace OEMRPS.Server.Repositories
     {
         IQueryable<T> Queryable();
 
-        Task<T> GetById(int id);
+        Task<T?> GetById(int id);
         Task<IEnumerable<T>> GetAll();
-        Task<T> GetAsync(Expression<Func<T, bool>> predicate);
+        Task<T?> GetAsync(Expression<Func<T, bool>> predicate);
         Task<List<T>> GetAllAsync(Expression<Func<T, bool>> predicate);
 
-        Task<DbResultDTO> Add(T entity);
-        Task<DbResultDTO> Update(T entity);
-        Task<DbResultDTO> Delete(T entity);
-        Task<DbResultDTO> DeleteRange(List<T> entities);
+        Task<DbResultDTO<T>> Add(T entity);
+        Task<DbResultDTO<T>> Update(T entity);
+        Task<DbResultDTO<T>> Delete(T entity);
+        Task<DbResultDTO<T>> DeleteRange(List<T> entities);
         Task SaveAsync();
     }
 
@@ -39,110 +39,123 @@ namespace OEMRPS.Server.Repositories
         public IQueryable<T> Queryable() => dbSet.AsQueryable();
 
 
-        public async Task<DbResultDTO> Add(T entity)
+        public virtual async Task<DbResultDTO<T>> Add(T entity)
         {
             try
             {
-                dbSet.Add(entity);
-                await dbContext.SaveChangesAsync();
+                if (entity != null)
+                {
+                    dbSet.Add(entity);
+                    await dbContext.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {
-                return new DbResultDTO
+                return new DbResultDTO<T>
                 {
                     IsSuccess = false,
                     ErrorMessage = $"Failed to Add: {typeof(T).Name}, \n Ex: {ex.Message}"
                 };
             }
 
-            return new DbResultDTO
+            return new DbResultDTO<T>
             {
-                IsSuccess = true
+                IsSuccess = true,
+                Entity = entity
             };
 
         }
 
-        public async Task<IEnumerable<T>> GetAll()
+        public virtual async Task<IEnumerable<T>> GetAll()
         {
             return await dbSet.ToListAsync();
         }
 
-        public async Task<T> GetById(int Id)
+        public virtual async Task<T?> GetById(int Id)
         {
             return await dbSet.FirstOrDefaultAsync(x => x.Id == Id);
         }
 
-        public async Task<T> GetAsync(Expression<Func<T, bool>> predicate)
+        public virtual async Task<T?> GetAsync(Expression<Func<T, bool>> predicate)
         {
             return await dbSet.FirstOrDefaultAsync(predicate);
         }
 
-        public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
+        public virtual async Task<List<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
         {
             return await dbSet.Where(predicate).ToListAsync();
         }
 
-        public async Task<DbResultDTO> Update(T entity)
+        public virtual async Task<DbResultDTO<T>> Update(T entity)
         {
             try
             {
-                dbSet.Update(entity);
-                await dbContext.SaveChangesAsync();
+                if(entity != null)
+                {
+                    dbSet.Update(entity);
+                    await dbContext.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {
-                return new DbResultDTO
+                return new DbResultDTO<T>
                 {
                     IsSuccess = false,
                     ErrorMessage = $"Failed to Update: {typeof(T).Name}, \n Ex: {ex.Message}"
                 };
             }
 
-            return new DbResultDTO
+            return new DbResultDTO<T>
             {
                 IsSuccess = true
             };
         }
 
-        public async Task<DbResultDTO> Delete(T entity)
+        public virtual async Task<DbResultDTO<T>> Delete(T entity)
         {
             try
             {
-                dbSet.Remove(entity);
-                await dbContext.SaveChangesAsync();
+                if (entity != null)
+                {
+                    dbSet.Remove(entity);
+                    await dbContext.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {
-                return new DbResultDTO
+                return new DbResultDTO<T>
                 {
                     IsSuccess = false,
                     ErrorMessage = $"Failed to Delete: {typeof(T).Name}, \n Ex: {ex.Message}"
                 };
             }
 
-            return new DbResultDTO
+            return new DbResultDTO<T>
             {
                 IsSuccess = true
             };
         }
 
-        public async Task<DbResultDTO> DeleteRange(List<T> entities)
+        public virtual async Task<DbResultDTO<T>> DeleteRange(List<T> entities)
         {
             try
             {
-                dbSet.RemoveRange(entities);
-                await dbContext.SaveChangesAsync();
+                if (entities.Count > 0)
+                {
+                    dbSet.RemoveRange(entities);
+                    await dbContext.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {
-                return new DbResultDTO
+                return new DbResultDTO<T>
                 {
                     IsSuccess = false,
                     ErrorMessage = $"Failed to bulk Delete: {typeof(T).Name}, \n Ex: {ex.Message}"
                 };
             }
 
-            return new DbResultDTO
+            return new DbResultDTO<T>
             {
                 IsSuccess = true
             };

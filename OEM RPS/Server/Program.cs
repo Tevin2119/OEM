@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.ResponseCompression;
+﻿using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using OEM_RPS.Shared;
 using OEM_RPS.Shared.Model;
@@ -9,18 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json");
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
 builder.Services.AddRazorPages();
 builder.Services.AddScoped<IRockPaperScissors, RockPaperScissorsService>();
 
 //Genric Repo layer
-
-//RPSGame
-//builder.Services.AddScoped<IGenericRepository<RPSGame>, GenericRepository<RPSGame>>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
-//RoundResult
-//builder.Services.AddScoped(typeof(IGenericRepository<RoundResult>), typeof(GenericRepository<RoundResult>));
 
 //Mangae DBContext
 builder.Services.AddDbContext<Context>(options =>

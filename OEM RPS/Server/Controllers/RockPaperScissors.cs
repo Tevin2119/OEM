@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OEM_RPS.Shared;
 using OEM_RPS.Shared.DTO;
-
-// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using OEM_RPS.Shared.Enums;
 
 namespace OEMRPS.Server.Controllers
 {
@@ -22,19 +17,71 @@ namespace OEMRPS.Server.Controllers
         }
 
         // GET: /<controller>/
-        [HttpGet("startgame/{playerName}/{bestOf:int}")]
-        public async Task<IActionResult> Index(string playerName, int bestOf)
+        [HttpGet("startgame/{playerName}/{bestOf:int}/{random:bool}")]
+        public async Task<ActionResult<ApiResponse<RPSGame>>> StartGame(string playerName, int bestOf, bool random)
         {
-            RPSGame game = await gameService.StartGame(playerName, bestOf);
+            ApiResponse<RPSGame> apiResponse = new(StatusCodeEnum.BadRequest, "", null);
+            try
+            {
+                RPSGame game = await gameService.StartGame(playerName, bestOf, random);
 
-            if(game == null) return BadRequest();
-            return Ok(game);
+                if (game == null)
+                {
+                    apiResponse.Message = $"Failed to start game for player: {playerName}, please try again";
+                    return apiResponse;
+                }
+
+                return Ok(ApiResponse<RPSGame>.Success(game));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<RPSGame>.BadRequest($"Failed to start a new game: {ex.Message}"));
+            }
         }
 
-        [HttpPost("playround/")]
-        public async Task<RPSGame> PlayRound(RPSGameDTO rPSGame)
+        // GET: /<controller>/
+        [HttpGet("getall")]
+        public async Task<ActionResult<ApiResponse<List<RPSGame>>>> LeaderBoard()
         {
-            return await gameService.PlayRound(rPSGame);
+            ApiResponse<List<RPSGame>> apiResponse = new(StatusCodeEnum.Success, "", null);
+            try
+            {
+                List<RPSGame> games = await gameService.LeaderBoard();
+
+                if (games == null)
+                {
+                    apiResponse.Message = $"Failed to all games";
+                    return apiResponse;
+                }
+
+                return Ok(ApiResponse<List<RPSGame>>.Success(games));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<RPSGame>.BadRequest($"Failed to start a new game: {ex.Message}"));
+            }
+        }
+
+        //POST
+        [HttpPost("playround/")]
+        public async Task<ActionResult<ApiResponse<RPSGame>>> PlayRound([FromBody] RPSGameDTO rPSGame)
+        {
+            ApiResponse<RPSGame> apiResponse = new(StatusCodeEnum.BadRequest, "", null);
+            try
+            {
+                RPSGame game = await gameService.PlayRound(rPSGame);
+                if(game == null)
+                {
+                    apiResponse.Message = $"Failed to make a move in existing game, please try again";
+                    return apiResponse;
+
+                }
+                return Ok(ApiResponse<RPSGame>.Success(game));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<RPSGame>.BadRequest($"Failed to continue an existing game: {ex.Message}"));
+            }
         }
     }
 }

@@ -1,0 +1,129 @@
+﻿@if (CanSelect == true)
+ {
+    <div>
+        <button @onclick="Next">Next</button>
+    </div>
+ }
+
+<div class="header">
+    <div class="logo">
+        <div>
+            <section>
+                <main>
+                    <div>
+                        <img class="gameButton" src="@currentImage" @onclick="Select" alt="Current Image">
+                    </div>
+                </main>
+            </section>
+        </div>
+    </div>
+</div>
+@if (CanSelect == true)
+ {
+    <div>
+        <button @onclick="Previous">Previous</button>
+    </div>
+ }
+
+
+
+@code {
+    [Parameter]
+    public bool? CanSelect { get; set; } = false; // Governs Selections and rotation
+
+    [Parameter]
+    public Action<PositionEnum>? HandleSelection { get; set; }
+
+    [Parameter]
+    public List<string> ImageUrls { get; set; } = new List<string>();
+
+    [Parameter]
+    public int RotationIntervalInSeconds { get; set; } = 2; // Default interval is 2 seconds
+
+    [Inject] IToastService? ToastService { get; set; }
+
+    private string currentImage = string.Empty;
+    private Timer? timer;
+
+    protected override void OnInitialized()
+    {
+        // Initialize current image
+        currentImage = ImageUrls?.FirstOrDefault() ?? "";
+
+        if (CanSelect != null && CanSelect == true) return; //stop rotation
+
+        // Start the timer to rotate images
+        timer = new Timer(ChangeImage, null, 0, RotationIntervalInSeconds * 1000);
+
+        base.OnInitialized();
+    }
+
+    private void Next()
+    {
+        if (CanSelect != true) return;
+
+        var currentIndex = ImageUrls.IndexOf(currentImage);
+        currentIndex = (currentIndex + 1) % ImageUrls.Count;
+        currentImage = ImageUrls[currentIndex];
+    }
+
+    private void Previous()
+    {
+        if (CanSelect != true) return;
+
+        var currentIndex = ImageUrls.IndexOf(currentImage);
+        currentIndex = (currentIndex - 1 + ImageUrls.Count) % ImageUrls.Count;
+        currentImage = ImageUrls[currentIndex];
+    }
+
+    private void Select()
+    {
+        Console.WriteLine("Selecting");
+
+        if (HandleSelection == null) return;
+
+        if (CanSelect != true) return;
+
+        // Extract the name of the image (without the extension) from the currentImage
+        string imageName = System.IO.Path.GetFileNameWithoutExtension(currentImage).ToLower();
+
+        // Map the image name to PositionEnum using a switch statement
+        PositionEnum? position = imageName switch
+        {
+            "rock" => PositionEnum.Rock,
+            "paper" => PositionEnum.Paper,
+            "scissors" => PositionEnum.Scissors,
+            "spock" => PositionEnum.Spock,
+            "lizard" => PositionEnum.Lizard,
+            _ => null// Handle any other cases or unknown images
+        };
+
+        if (position == null)
+        {
+            //some kind of alert
+            ToastService?.ShowWarning("Please choose a hand to play");
+
+            return;
+        }
+
+        //Invoke the HandleSelection action with the mapped PositionEnum value
+        HandleSelection.Invoke((PositionEnum)position);
+    }
+
+    private void ChangeImage(object state)
+    {
+        // Change the image to the next one in the array
+        var currentIndex = ImageUrls.IndexOf(currentImage);
+        currentIndex = (currentIndex + 1) % ImageUrls.Count;
+        currentImage = ImageUrls[currentIndex];
+
+        // Trigger UI update
+        InvokeAsync(StateHasChanged);
+    }
+
+    // Dispose of the timer when the component is disposed
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
+}

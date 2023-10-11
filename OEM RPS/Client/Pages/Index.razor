@@ -1,10 +1,169 @@
 ﻿@page "/"
 
-<PageTitle>Index</PageTitle>
+@inject IJSRuntime JS
+@inject IGameRepository GameRepo
+@inject IToastService ToastService
 
-<h1>Hello, world!</h1>
+<PageTitle>Home</PageTitle>
 
-Welcome to your new app.
+@if (game == null)
+{
+    <StartGame HandleUsername="HandleUsername" HandleBestOf="HandleBestOf" HandleRandomMode="HandleRandom" HandleFormSubmission=@(async () => await StartGameAsync()) ImageUrls="imageUrls" />
+}
+else
+{
+    <Arena ImageUrls="imageUrls" Game="game" HandlePosition=@(async (x) => await HandlePosition(x)) />
+}
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+
+@code {
+
+    private RPSGame? game;
+    private RPSGameDTO? gameDTO;
+    private bool randomMode;
+    private string? userName;
+    private int bestOf;
+
+    private List<string> imageUrls = new List<string>
+    {
+        "assets/rock.png",
+        "assets/paper.png",
+        "assets/scissors.png",
+        "assets/spock.svg",
+        "assets/lizard.png",
+
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    private void HandleUsername(string _userName)
+    {
+        // Update the Game or perform any other action
+        userName = _userName;
+    }
+
+    private void HandleBestOf(int _bestOf)
+    {
+        // Update the Game or perform any other action
+        bestOf = _bestOf;
+        if (bestOf > 10) bestOf = 10;
+
+    }
+
+    private void HandleRandom(bool random)
+    {
+        randomMode = random;
+        //send to db to update the first collumn 
+    }
+
+    private async Task HandlePosition(PositionEnum positionEnum)
+    {
+        // Update the Game or perform any other action
+        gameDTO.Choice = positionEnum;
+
+        Console.WriteLine($"whats up: {gameDTO.Choice}");
+
+        await PlayRoundAsync();
+    }
+
+
+    private async Task StartGameAsync()
+    {
+        if (string.IsNullOrEmpty(userName))
+        {
+            //no can do alert user
+            ToastService.ShowWarning("UserName is required");
+
+            return;
+        }
+
+        try
+        {
+            // Call the StartGameAsync method from the repository
+            ApiResponse<RPSGame> response = await GameRepo.StartGameAsync(userName, bestOf, randomMode);
+
+            if (response != null && response.StatusCode == OEM_RPS.Shared.Enums.StatusCodeEnum.Success && response.Data != null)
+            {
+                game = response.Data;
+
+                gameDTO = new();
+                gameDTO.PlayerName = userName;
+                gameDTO.GameID = response.Data.Id;
+
+                StateHasChanged();
+            }
+            else if (response != null && !string.IsNullOrEmpty(response.Message))
+            {
+                ToastService.ShowError($"Error: {response.Message}");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Failed to initaite a round: {ex.Message}");
+        }
+
+    }
+
+    private async Task PlayRoundAsync()
+    {
+
+        try
+        {
+            // Call the PlayRoundAsync method from the repository
+            ApiResponse<RPSGame> response = await GameRepo.PlayRoundAsync(gameDTO);
+
+            if (response != null && response.StatusCode == OEM_RPS.Shared.Enums.StatusCodeEnum.Success)
+            {
+                game = response.Data;
+                StateHasChanged();
+            }
+            else if (response != null && !string.IsNullOrEmpty(response.Message))
+            {
+                ToastService.ShowError($"Error: {response.Message}");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Failed to initaite a round: {ex.Message}");
+        }
+
+        if ((game != null && game.RoundResults != null && game.RoundsToWin == game.RoundResults.Count) || gameDTO == null)
+        {
+            //Game has concluded
+            SetWinner();
+            return;
+        }
+    }
+
+    private void SetWinner()
+    {
+        if (game != null && game.RoundResults != null)
+        {
+            int player1Wins = game.RoundResults.Count(result => result.Winner == WinnerEnum.Player1);
+            int player2Wins = game.RoundResults.Count(result => result.Winner == WinnerEnum.Player2);
+
+            if (player1Wins > player2Wins)
+            {
+                ToastService.ShowSuccess($"Player 1 is the overall winner with {player1Wins} wins.");
+            }
+            else if (player2Wins > player1Wins)
+            {
+                ToastService.ShowSuccess($"Player 2 is the overall winner with {player2Wins} wins.");
+            }
+            else
+            {
+                ToastService.ShowSuccess("It's a tie! There is no overall winner.");
+            }
+
+            game = null;
+            StateHasChanged();
+        }
+    }
+
+}
 

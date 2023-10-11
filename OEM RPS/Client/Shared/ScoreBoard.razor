@@ -1,0 +1,32 @@
+﻿@if (string.IsNullOrEmpty(PlayerName))
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div>
+        <h1 class="text-center">@PlayerName</h1>
+
+        <h2 role="status">Current Score: @Score</h2>
+        <h2 style="color:aqua" role="status">Current Position: @Position.ToString() </h2>
+        @*<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>*@
+
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public string? PlayerName { get; set; }
+
+    [Parameter]
+    public int Score { get; set; }
+
+    [Parameter]
+    public PositionEnum Position { get; set; }
+
+    protected void OnIniliazed()
+    {
+        Console.WriteLine($"Score: {Score}");
+    }
+}
